@@ -51,7 +51,7 @@ pipeline {
             steps {
                script{
                    withDockerRegistry(credentialsId: 'docker-cred') {
-                    sh "docker build -t  santa123 . "
+                    sh "sudo docker build -t  santa123 . "
                  }
                }
             }
