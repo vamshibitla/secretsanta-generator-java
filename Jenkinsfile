@@ -9,11 +9,11 @@ pipeline {
     }
 
     stages {
-        stage('git-checkout') {
-            steps {
-                git 'https://github.com/jaiswaladi246/secretsanta-generator.git'
-            }
-        }
+        // stage('git-checkout') {
+        //     steps {
+        //         git 'https://github.com/jaiswaladi246/secretsanta-generator.git'
+        //     }
+        // }
 
         stage('Code-Compile') {
             steps {
