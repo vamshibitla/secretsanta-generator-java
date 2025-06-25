@@ -9,11 +9,6 @@ pipeline {
     }
 
     stages {
-        // stage('git-checkout') {
-        //     steps {
-        //         git 'https://github.com/jaiswaladi246/secretsanta-generator.git'
-        //     }
-        // }
 
         stage('Code-Compile') {
             steps {
@@ -73,31 +68,8 @@ pipeline {
             }
         }
         
-        	 
-        stage('Docker Image Scan') {
-            steps {
-               sh "trivy image adijaiswal/santa123:latest "
-            }
-        }}
         
-         post {
-            always {
-                emailext (
-                    subject: "Pipeline Status: ${BUILD_NUMBER}",
-                    body: '''<html>
-                                <body>
-                                    <p>Build Status: ${BUILD_STATUS}</p>
-                                    <p>Build Number: ${BUILD_NUMBER}</p>
-                                    <p>Check the <a href="${BUILD_URL}">console output</a>.</p>
-                                </body>
-                            </html>''',
-                    to: 'jaiswaladi246@gmail.com',
-                    from: 'jenkins@example.com',
-                    replyTo: 'jenkins@example.com',
-                    mimeType: 'text/html'
-                )
-            }
-        }
+        
 		
 	stage ('Docker Image Scan') {
      steps {
