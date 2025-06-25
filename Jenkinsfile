@@ -61,8 +61,8 @@ pipeline {
             steps {
                script{
                    withDockerRegistry(credentialsId: 'docker-cred') {
-                    sh "docker tag santa123 adijaiswal/santa123:latest"
-                    sh "docker push adijaiswal/santa123:latest"
+                    sh "docker tag santa123 vamsi01/santa123:latest"
+                    sh "docker push vamsi01/santa123:latest"
                  }
                }
             }
@@ -88,9 +88,9 @@ pipeline {
 	                              <p> check the <a href=" ${BUILD_URL}" > console output  </a>.</p>
 	                       </body>  
 	                 </html>""",
-	  to:  'vamsikrris01@gmail.com'
-	  from: 'jenkins@example.com'
-	 replyTo: 'jenkins@example.com'
+	  to:  'vamsikrris01@gmail.com',
+	  from: 'jenkins@example.com',
+	 replyTo: 'jenkins@example.com',
 	mimeType: 'text/html'
      )
   }
