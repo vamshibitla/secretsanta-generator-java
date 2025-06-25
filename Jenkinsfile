@@ -87,7 +87,7 @@ pipeline {
 	                              <p> Build Number: ${BUILD_NUMBER}</p>
 	                              <p> check the <a href=" ${BUILD_URL}" > console output  </a>.</p>
 	                       </body>  
-	                 </html>' ' '
+	                 </html>' ' ',
 	  to:  ' vamsikrris01@gmail.com'
 	  from: ' jenkins@example.com'
 	 replyTo: '  jenkins@example.com'
