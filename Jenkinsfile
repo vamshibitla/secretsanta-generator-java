@@ -88,7 +88,7 @@ pipeline {
 	                              <p> check the <a href=" ${BUILD_URL}" > console output  </a>.</p>
 	                       </body>  
 	                 </html>""",
-	  to:  'vamsikrris01@gmail.com',
+	  to:  'vamshirockz42@gmail.com',
 	  from: 'jenkins@example.com',
 	 replyTo: 'jenkins@example.com',
 	mimeType: 'text/html'
