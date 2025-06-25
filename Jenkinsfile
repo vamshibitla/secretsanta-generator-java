@@ -99,7 +99,31 @@ pipeline {
             }
         }
 		
-		
+	stage ('Docker Image Scan') {
+     steps {
+        sh "trivy image vamsi01/santa123:latest "
+     }
+} }
+
+ post {
+      always {
+              emailext   (
+                subject:  "Pipeline Status: ${BUILD_NUMBER} },
+	     body: ' ' '<html>
+	                        <body>                     
+	                              <p> Build status: ${BUILD_STATUS}</p>
+	                              <p> Build Number: ${BUILD_NUMBER}</p>
+	                              <p> check the <a href=" ${BUILD_URL}" > console output  </a>.</p>
+	                       </body>  
+	                 </html>' ' '
+	  to:  ' vamsikrris01@gmail.com'
+	  from: ' jenkins@example.com'
+	 replyTo: '  jenkins@example.com'
+	mimeType: 'text/html'
+     )
+  }
+}
+	
 
     
 }
