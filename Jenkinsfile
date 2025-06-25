@@ -75,7 +75,7 @@ pipeline {
      steps {
         sh "trivy image vamsi01/santa123:latest "
      }
-} }
+} 
 
  post {
   always {
@@ -98,6 +98,4 @@ pipeline {
 
 }
 	
-
-    
 }
