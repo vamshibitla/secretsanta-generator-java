@@ -43,6 +43,7 @@ pipeline {
                sh "mvn package"
             }
         }
+    }
         post {
       always {
               emailext   (
@@ -62,6 +63,6 @@ pipeline {
   }
 
     }
-}
+
     
 }
