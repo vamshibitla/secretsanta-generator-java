@@ -1,94 +1,48 @@
 pipeline {
     agent any
-    tools{
-        jdk 'jdk17'
+    tools {
         maven 'maven3'
+        jdk 'jdk17'
     }
-    environment{
+    environment {
         SCANNER_HOME= tool 'sonar-scanner'
     }
 
     stages {
-
-        stage('Code-Compile') {
+        // stage('Git checkout') {
+        //     steps {
+        //        git 'https://github.com/vamshibitla/secretsanta-generator-java.git'
+        //     }
+        // }
+        stage('Compile') {
             steps {
-               sh "mvn clean compile"
+                sh "mvn compile"
             }
         }
-        
-        stage('Unit Tests') {
+        stage('Tests') {
             steps {
                sh "mvn test"
             }
         }
-        
-		stage('OWASP Dependency Check') {
+        stage('Sonarqube Analysis') {
             steps {
-               dependencyCheck additionalArguments: ' --scan ./ ', odcInstallation: 'DC'
-                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                withSonarQubeEnv('sonar') {
+                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=santa \
+                     -Dsonar.projectKey=santa -Dsonar.java.binaries=. '''
+                }
             }
         }
-
-
-        stage('Sonar Analysis') {
+        stage('Owasp Scan') {
             steps {
-               withSonarQubeEnv('sonar'){
-                   sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=Santa \
-                   -Dsonar.java.binaries=. \
-                   -Dsonar.projectKey=Santa1 '''
-               }
+               dependencyCheck additionalArguments: ' --scan . ', odcInstallation: 'DC'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
             }
         }
-
-		 
-        stage('Code-Build') {
+        stage('Build Application') {
             steps {
-               sh "mvn clean package"
-		    sh "whoami"
-
+               sh "mvn package"
             }
-        }
-
-         stage('Docker Build') {
-            steps {
-               script{
-                   withDockerRegistry(credentialsId: 'docker-cred') {
-                    sh "docker build -t  santa123 . "
-                 }
-               }
-            }
-        }
-
-        stage('Docker Push') {
-            steps {
-               script{
-                   withDockerRegistry(credentialsId: 'docker-cred') {
-                    sh "docker tag santa123 vamsi01/santa123:latest"
-                    sh "docker push vamsi01/santa123:latest"
-                 }
-               }
-            }
-        }
-        
-        
-        
-		
-	stage ('Docker Image Scan') {
-     steps {
-        sh "trivy image vamsi01/santa123:latest "
-     }
-} 
-
-  stage('Test Email') {
-            steps {
-                emailext(
-                    subject: "Test Mail",
-                    body: "If you receive this, mail is configured properly.",
-                    to: 'vamshirockz42@gmail.com'
-                )
-            }
-  }
-
+        } 
+    }
 }
-	
-}
+    
