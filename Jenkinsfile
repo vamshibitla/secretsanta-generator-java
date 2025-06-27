@@ -56,24 +56,23 @@ pipeline {
     post {
         always {
             script {
-                // Capture full console log (no line limit)
-                def fullLog = currentBuild.rawBuild.getLog().join("\n")
-                
-                // Write to a file in workspace
-                writeFile file: 'console_output.txt', text: fullLog
+                // Read the full console log from current build
+                def logText = readFile("${env.WORKSPACE}/../${env.JOB_NAME}/builds/${env.BUILD_ID}/log")
+
+                // Save it as a .txt file in workspace
+                writeFile file: "console_output.txt", text: logText
             }
 
-            // Send email with log file attached
             emailext(
-                subject: "Pipeline Status: ${env.BUILD_NUMBER}",
+                subject: "Pipeline Log: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """<html>
                     <body>
-                        <p><b>Build status:</b> ${currentBuild.currentResult}</p>
-                        <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
-                        <p><a href="${env.BUILD_URL}">Click here for full build console</a></p>
+                        <p><b>Status:</b> ${currentBuild.currentResult}</p>
+                        <p><b>Build:</b> ${env.BUILD_NUMBER}</p>
+                        <p><a href="${env.BUILD_URL}">View in Jenkins</a></p>
                     </body>
                 </html>""",
-                to: 'vamsikrris01@gmail.com',
+                to: 'vamshirockz42@gmail.com',
                 from: 'jenkins@example.com',
                 replyTo: 'jenkins@example.com',
                 mimeType: 'text/html',
