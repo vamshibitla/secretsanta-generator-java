@@ -45,9 +45,15 @@ pipeline {
         }
     }
         
-
-    post {
+post {
         always {
+            script {
+                // Save console output to file
+                def buildLogFile = "${env.WORKSPACE}/console_output.txt"
+                def buildLog = currentBuild.rawBuild.getLog(1000).join("\n") // Limit lines if needed
+                writeFile file: buildLogFile, text: buildLog
+            }
+
             emailext(
                 subject: "Pipeline Status: ${env.BUILD_NUMBER}",
                 body: """<html>
@@ -60,9 +66,11 @@ pipeline {
                 to: 'vamshirockz42@gmail.com',
                 from: 'jenkins@example.com',
                 replyTo: 'jenkins@example.com',
-                mimeType: 'text/html'
+                mimeType: 'text/html',
+                attachmentsPattern: 'console_output.txt'
             )
         }
     }
+   
 }
 
