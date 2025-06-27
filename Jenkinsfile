@@ -44,25 +44,34 @@ pipeline {
             }
         }
     }
-        post {
-      always {
-              emailext   (
-                subject:  "Pipeline Status: ${BUILD_NUMBER} ",
-	     body: """<html>
-	                        <body>                     
-	                              <p> Build status: ${BUILD_STATUS}</p>
-	                              <p> Build Number: ${BUILD_NUMBER}</p>
-	                              <p> check the <a href=" ${BUILD_URL}" > console output  </a>.</p>
-	                       </body>  
-	                 </html>""",
-	  to:  'vamsikrris01@gmail.com',
-	  from: 'jenkins@example.com',
-	 replyTo: 'jenkins@example.com',
-	mimeType: 'text/html'
-     )
-  }
+        pipeline {
+    agent any
 
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Building...'
+            }
+        }
     }
 
-    
+    post {
+        always {
+            emailext(
+                subject: "Pipeline Status: ${env.BUILD_NUMBER}",
+                body: """<html>
+                    <body>
+                        <p>Build status: ${currentBuild.currentResult}</p>
+                        <p>Build Number: ${env.BUILD_NUMBER}</p>
+                        <p>Check the <a href="${env.BUILD_URL}">console output</a>.</p>
+                    </body>
+                </html>""",
+                to: 'vamshirockz42@gmail.com',
+                from: 'jenkins@example.com',
+                replyTo: 'jenkins@example.com',
+                mimeType: 'text/html'
+            )
+        }
+    }
 }
+
