@@ -46,23 +46,25 @@ pipeline {
         }
 
        
+      
         stage('Full Build Logging') {
             steps {
+                // 👇 Use Bash explicitly so redirection works
                 sh '''
                     #!/bin/bash
 
+                    # Remove previous log if any
                     rm -f $LOG_FILE
 
-                    # Log everything to both console and file
+                    # Redirect all stdout and stderr to console and file
                     exec > >(tee -a $LOG_FILE)
                     exec 2>&1
 
-                    echo "=== Build Started ==="
-                    echo "Doing work..."
-                    sleep 2
-                    echo "Listing files:"
-                    ls -l
-                    echo "=== Build Finished ==="
+                    echo "==== Build Started ===="
+                    echo "Running some dummy work..."
+                    ls -l /tmp
+                    sleep 1
+                    echo "==== Build Completed ===="
                 '''
             }
         }
@@ -73,8 +75,8 @@ pipeline {
             emailext(
                 subject: "Pipeline Log: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """<html><body>
-                    <p><b>Status:</b> ${currentBuild.currentResult}</p>
-                    <p>View in Jenkins: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                    <p>Status: ${currentBuild.currentResult}</p>
+                    <p>Check full log attached or view it <a href="${env.BUILD_URL}">here</a>.</p>
                 </body></html>""",
                 to: 'vamshirockz42@gmail.com',
                 attachmentsPattern: "${env.LOG_FILE}",
