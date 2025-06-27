@@ -43,27 +43,37 @@ pipeline {
                sh "mvn package"
             }
         }
+
+        stage('Example') {
+            steps {
+                echo "Starting example stage..."
+                echo "Running some dummy commands"
+                echo "Finishing up"
+            }
+        }
     }
-        
-post {
+
+    post {
         always {
             script {
-                // Save console output to file
-                def buildLogFile = "${env.WORKSPACE}/console_output.txt"
-                def buildLog = currentBuild.rawBuild.getLog(1000).join("\n") // Limit lines if needed
-                writeFile file: buildLogFile, text: buildLog
+                // Capture full console log (no line limit)
+                def fullLog = currentBuild.rawBuild.getLog().join("\n")
+                
+                // Write to a file in workspace
+                writeFile file: 'console_output.txt', text: fullLog
             }
 
+            // Send email with log file attached
             emailext(
                 subject: "Pipeline Status: ${env.BUILD_NUMBER}",
                 body: """<html>
                     <body>
-                        <p>Build status: ${currentBuild.currentResult}</p>
-                        <p>Build Number: ${env.BUILD_NUMBER}</p>
-                        <p>Check the <a href="${env.BUILD_URL}">console output</a>.</p>
+                        <p><b>Build status:</b> ${currentBuild.currentResult}</p>
+                        <p><b>Build Number:</b> ${env.BUILD_NUMBER}</p>
+                        <p><a href="${env.BUILD_URL}">Click here for full build console</a></p>
                     </body>
                 </html>""",
-                to: 'vamshirockz42@gmail.com',
+                to: 'vamsikrris01@gmail.com',
                 from: 'jenkins@example.com',
                 replyTo: 'jenkins@example.com',
                 mimeType: 'text/html',
@@ -71,6 +81,7 @@ post {
             )
         }
     }
-   
 }
+        
+
 
