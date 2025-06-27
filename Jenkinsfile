@@ -6,6 +6,7 @@ pipeline {
     }
     environment {
         SCANNER_HOME= tool 'sonar-scanner'
+         LOG_FILE = 'console_output.txt'
     }
 
     stages {
@@ -43,35 +44,45 @@ pipeline {
                sh "mvn package"
             }
         }
+         stage('Full Build Logging') {
+            steps {
+                sh '''
+                    # Remove old log if exists
+                    rm -f $LOG_FILE
 
+                    # Start capturing all output to log file using exec trick
+                    exec > >(tee -a $LOG_FILE)
+                    exec 2>&1
         
-    }
-
-    post {
-        always {
-            script {
-                // ✅ Get full log safely (without getRawBuild)
-                def fullLog = currentBuild.getLog().join("\n")
-                writeFile file: "console_output.txt", text: fullLog
+    
+                    echo "==== STARTING BUILD ===="
+                    echo "Running step 1..."
+                    ls -al
+                    echo "Running step 2..."
+                    sleep 2
+                    echo "==== BUILD COMPLETE ===="
+                '''
             }
-
-            emailext(
-                subject: "Pipeline Log: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """<html>
-                    <body>
-                        <p><b>Status:</b> ${currentBuild.currentResult}</p>
-                        <p><a href="${env.BUILD_URL}">Click here to view in Jenkins</a></p>
-                    </body>
-                </html>""",
-                to: 'vamshirockz42@gmail.com',
-                from: 'jenkins@example.com',
-                replyTo: 'jenkins@example.com',
-                mimeType: 'text/html',
-                attachmentsPattern: 'console_output.txt'
-            )
         }
     }
 
-}  
+  post {
+        always {
+            emailext(
+                subject: "Full Pipeline Log: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """<html>
+                    <body>
+                        <p><b>Status:</b> ${currentBuild.currentResult}</p>
+                        <p>Check attached full console log, or view it <a href="${env.BUILD_URL}">here</a>.</p>
+                    </body>
+                </html>""",
+                to: 'vamshirockz42@gmail.com',
+                attachmentsPattern: "${env.LOG_FILE}",
+                mimeType: 'text/html'
+ )
+        }
+    }
+    }
+                
 
 
