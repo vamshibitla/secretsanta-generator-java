@@ -44,45 +44,42 @@ pipeline {
                sh "mvn package"
             }
         }
-         stage('Full Build Logging') {
+
+       
+        stage('Full Build Logging') {
             steps {
                 sh '''
-                    # Remove old log if exists
+                    #!/bin/bash
+
                     rm -f $LOG_FILE
 
-                    # Start capturing all output to log file using exec trick
+                    # Log everything to both console and file
                     exec > >(tee -a $LOG_FILE)
                     exec 2>&1
-        
-    
-                    echo "==== STARTING BUILD ===="
-                    echo "Running step 1..."
-                    ls -al
-                    echo "Running step 2..."
+
+                    echo "=== Build Started ==="
+                    echo "Doing work..."
                     sleep 2
-                    echo "==== BUILD COMPLETE ===="
+                    echo "Listing files:"
+                    ls -l
+                    echo "=== Build Finished ==="
                 '''
             }
         }
     }
 
-  post {
+    post {
         always {
             emailext(
-                subject: "Full Pipeline Log: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """<html>
-                    <body>
-                        <p><b>Status:</b> ${currentBuild.currentResult}</p>
-                        <p>Check attached full console log, or view it <a href="${env.BUILD_URL}">here</a>.</p>
-                    </body>
-                </html>""",
+                subject: "Pipeline Log: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """<html><body>
+                    <p><b>Status:</b> ${currentBuild.currentResult}</p>
+                    <p>View in Jenkins: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                </body></html>""",
                 to: 'vamshirockz42@gmail.com',
                 attachmentsPattern: "${env.LOG_FILE}",
                 mimeType: 'text/html'
- )
+            )
         }
     }
-    }
-                
-
-
+}
