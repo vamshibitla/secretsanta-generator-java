@@ -51,28 +51,29 @@ pipeline {
                 echo "Finishing up"
             }
         }
+    stage('Build') {
+            steps {
+                // Capture output to console_output.txt AND show on console
+                sh '''
+                    echo "Starting build process..." | tee console_output.txt
+                    echo "Running commands..." | tee -a console_output.txt
+                    echo "Finishing build..." | tee -a console_output.txt
+                '''
+            }
+        }
     }
 
     post {
         always {
-            script {
-                // Read the full console log from current build
-                def logText = readFile("${env.WORKSPACE}/../${env.JOB_NAME}/builds/${env.BUILD_ID}/log")
-
-                // Save it as a .txt file in workspace
-                writeFile file: "console_output.txt", text: logText
-            }
-
             emailext(
-                subject: "Pipeline Log: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                subject: "Pipeline Status: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """<html>
                     <body>
                         <p><b>Status:</b> ${currentBuild.currentResult}</p>
-                        <p><b>Build:</b> ${env.BUILD_NUMBER}</p>
-                        <p><a href="${env.BUILD_URL}">View in Jenkins</a></p>
+                        <p><a href="${env.BUILD_URL}">Click to view full console output</a></p>
                     </body>
                 </html>""",
-                to: 'vamshirockz42@gmail.com',
+                to: 'vamsikrris01@gmail.com',
                 from: 'jenkins@example.com',
                 replyTo: 'jenkins@example.com',
                 mimeType: 'text/html',
@@ -81,6 +82,7 @@ pipeline {
         }
     }
 }
-        
+
+      
 
 
