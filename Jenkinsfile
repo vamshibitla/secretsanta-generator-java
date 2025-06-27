@@ -44,33 +44,23 @@ pipeline {
             }
         }
 
-        stage('Example') {
-            steps {
-                echo "Starting example stage..."
-                echo "Running some dummy commands"
-                echo "Finishing up"
-            }
-        }
-    stage('Build') {
-            steps {
-                // Capture output to console_output.txt AND show on console
-                sh '''
-                    echo "Starting build process..." | tee console_output.txt
-                    echo "Running commands..." | tee -a console_output.txt
-                    echo "Finishing build..." | tee -a console_output.txt
-                '''
-            }
-        }
+        
     }
 
     post {
         always {
+            script {
+                // ✅ Get full log safely (without getRawBuild)
+                def fullLog = currentBuild.getLog().join("\n")
+                writeFile file: "console_output.txt", text: fullLog
+            }
+
             emailext(
-                subject: "Pipeline Status: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                subject: "Pipeline Log: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
                 body: """<html>
                     <body>
                         <p><b>Status:</b> ${currentBuild.currentResult}</p>
-                        <p><a href="${env.BUILD_URL}">Click to view full console output</a></p>
+                        <p><a href="${env.BUILD_URL}">Click here to view in Jenkins</a></p>
                     </body>
                 </html>""",
                 to: 'vamshirockz42@gmail.com',
@@ -81,8 +71,7 @@ pipeline {
             )
         }
     }
-}
 
-      
+}  
 
 
