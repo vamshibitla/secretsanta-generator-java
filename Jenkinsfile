@@ -1,87 +1,93 @@
 pipeline {
     agent any
     tools {
-        maven 'maven3'
-        jdk 'jdk17'
+        maven "maven3"
+        jdk "jdk11"
     }
+
     environment {
-        SCANNER_HOME= tool 'sonar-scanner'
-         LOG_FILE = 'console_output.txt'
+        // This can be nexus3 or nexus2
+        NEXUS_VERSION = "nexus3"
+        // This can be http or https
+        NEXUS_PROTOCOL = "http"
+        // Where your Nexus is running
+        NEXUS_URL = "13.222.216.26:8081"
+        // Repository where we will upload the artifact
+        NEXUS_REPOSITORY = "my-repo"
+        // Jenkins credential id to authenticate to Nexus OSS
+        NEXUS_CREDENTIAL_ID = "nexuscred"
+        ARTIFACT_VERSION = "${BUILD_NUMBER}"
     }
 
     stages {
-        // stage('Git checkout') {
-        //     steps {
-        //        git 'https://github.com/vamshibitla/secretsanta-generator-java.git'
-        //     }
-        // }
-        stage('Compile') {
+        stage("Check out") {
             steps {
-                sh "mvn compile"
-            }
-        }
-        stage('Tests') {
-            steps {
-               sh "mvn test"
-            }
-        }
-        stage('Sonarqube Analysis') {
-            steps {
-                withSonarQubeEnv('sonar') {
-                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=santa \
-                     -Dsonar.projectKey=santa -Dsonar.java.binaries=. '''
+                script {
+                    git branch: 'main', url: 'https://github.com/vamshibitla/secretsanta-generator-java.git';
                 }
             }
         }
-        stage('Owasp Scan') {
+
+        stage("mvn build") {
             steps {
-               dependencyCheck additionalArguments: ' --scan . ', odcInstallation: 'DC'
-                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-            }
-        }
-        stage('Build Application') {
-            steps {
-               sh "mvn package"
+                script {
+                    sh "mvn clean package"
+                }
             }
         }
 
-       
-      
-        stage('Full Build Logging') {
+        stage("publish to nexus") {
             steps {
-                // 👇 Use Bash explicitly so redirection works
+                script {
+                    // Read POM xml file using 'readMavenPom' step , this step 'readMavenPom' is included in: https://plugins.jenkins.io/pipeline-utility-steps
+                    pom = readMavenPom file: "pom.xml";
+                    // Find built artifact under target folder
+                    filesByGlob = findFiles(glob: "target/*.${pom.packaging}");
+                    // Print some info from the artifact found
+                    echo "${filesByGlob[0].name} ${filesByGlob[0].path} ${filesByGlob[0].directory} ${filesByGlob[0].length} ${filesByGlob[0].lastModified}"
+                    // Extract the path from the File found
+                    artifactPath = filesByGlob[0].path;
+                    // Assign to a boolean response verifying If the artifact name exists
+                    artifactExists = fileExists artifactPath;
+
+                    if(artifactExists) {
+                        echo "*** File: ${artifactPath}, group: ${pom.groupId}, packaging: ${pom.packaging}, version ${pom.version}";
+
+                        nexusArtifactUploader(
+                            nexusVersion: NEXUS_VERSION,
+                            protocol: NEXUS_PROTOCOL,
+                            nexusUrl: NEXUS_URL,
+                            groupId: pom.groupId,
+                            version: ARTIFACT_VERSION,
+                            repository: NEXUS_REPOSITORY,
+                            credentialsId: NEXUS_CREDENTIAL_ID,
+                            artifacts: [
+                                // Artifact generated such as .jar, .ear and .war files.
+                                [artifactId: pom.artifactId,
+                                classifier: '',
+                                file: artifactPath,
+                                type: pom.packaging]
+                            ]
+                        );
+
+                    } else {
+                        error "*** File: ${artifactPath}, could not be found";
+                    }
+                }
+            }
+        }
+        stage ('Execute Ansible Play - CD'){
+            agent {
+                label 'ansible'
+            }
+            steps{
+                script {
+                    git branch: 'main', url: 'https://github.com/vamshibitla/secretsanta-generator-java.git';
+                }
                 sh '''
-                    #!/bin/bash
-
-                    # Remove previous log if any
-                    rm -f $LOG_FILE
-
-                    # Redirect all stdout and stderr to console and file
-                    exec > >(tee -a $LOG_FILE)
-                    exec 2>&1
-
-                    echo "==== Build Started ===="
-                    echo "Running some dummy work..."
-                    ls -l /tmp
-                    sleep 1
-                    echo "==== Build Completed ===="
+                    ansible-playbook -e vers=${BUILD_NUMBER} roles/site.yml
                 '''
             }
-        }
-    }
-
-    post {
-        always {
-            emailext(
-                subject: "Pipeline Log: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                body: """<html><body>
-                    <p>Status: ${currentBuild.currentResult}</p>
-                    <p>Check full log attached or view it <a href="${env.BUILD_URL}">here</a>.</p>
-                </body></html>""",
-                to: 'vamshirockz42@gmail.com',
-                attachmentsPattern: "${env.LOG_FILE}",
-                mimeType: 'text/html'
-            )
         }
     }
 }
