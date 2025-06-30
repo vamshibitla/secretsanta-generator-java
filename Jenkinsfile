@@ -23,7 +23,7 @@ pipeline {
         stage("Check out") {
             steps {
                 script {
-                    git branch: 'main', url: 'https://github.com/vamshibitla/secretsanta-generator-java.git';
+                    git branch: 'master', url: 'https://github.com/vamshibitla/secretsanta-generator-java.git';
                 }
             }
         }
@@ -82,7 +82,7 @@ pipeline {
             }
             steps{
                 script {
-                    git branch: 'main', url: 'https://github.com/vamshibitla/secretsanta-generator-java.git';
+                    git branch: 'master', url: 'https://github.com/vamshibitla/secretsanta-generator-java.git';
                 }
                 sh '''
                     ansible-playbook -e vers=${BUILD_NUMBER} roles/site.yml
